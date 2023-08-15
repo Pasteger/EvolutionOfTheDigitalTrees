@@ -4,8 +4,8 @@ using UnityEngine;
 
 public interface ICell
 {
-    int id { get; set; }
-    int energy { get; set; }
-    List<Dictionary<Vector3, int>> genome { get; set; }
-    int lifespan { get; set; }
+    int ID { get; set; }
+    int Energy { get; set; }
+    List<Dictionary<Vector3, int>> Genome { get; set; }
+    int Lifespan { get; set; }
 }

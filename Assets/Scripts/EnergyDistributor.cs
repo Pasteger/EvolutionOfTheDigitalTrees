@@ -1,81 +1,78 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 class EnergyDistributor
 {
-    public static void EnergyDistribution(GameObject cell)
+    public static void EnergyDistribution(ICell cell, Vector3 position)
     {
-        List<GameObject> neighbours = new List<GameObject>();
-        int commonEnergy = cell.GetComponent<ICell>().energy;
+        var neighbours = new List<ICell>();
+        var commonEnergy = cell.Energy;
 
-        for (int j = 0; j < 4; j++)
+        for (var j = 0; j < 4; j++)
         {
-            Vector3 direction = Vector3.up;
-            switch (j)
+            var direction = j switch
             {
-                case 1: direction = Vector3.down; break;
-                case 2: direction = Vector3.right; break;
-                case 3: direction = Vector3.left; break;
-            }
+                1 => Vector3.down,
+                2 => Vector3.right,
+                3 => Vector3.left,
+                _ => Vector3.up
+            };
 
-            GameObject neighbour = FindNeighbour(cell, direction);
-            if (neighbour != null)
-            {
-                commonEnergy += neighbour.GetComponent<ICell>().energy;
-                neighbours.Add(neighbour);
-            }
+            var neighbour = FindNeighbour(cell, position, direction);
+            if (ReferenceEquals(neighbour, null)) continue;
+            commonEnergy += neighbour.Energy;
+            neighbours.Add(neighbour);
         }
-        int averageEnergy = commonEnergy / (neighbours.Count + 1);
-        cell.GetComponent<ICell>().energy = averageEnergy;
-        foreach (GameObject n in neighbours)
+        var averageEnergy = commonEnergy / (neighbours.Count + 1);
+        cell.Energy = averageEnergy;
+        foreach (var n in neighbours)
         {
-            n.GetComponent<ICell>().energy = averageEnergy;
+            n.Energy = averageEnergy;
         }
     }
 
-    private static GameObject FindNeighbour(GameObject cell, Vector3 direction)
+    private static ICell FindNeighbour(ICell cell, Vector3 position, Vector3 direction)
     {
-
-        Ray ray = new Ray(cell.transform.position, direction);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit))
+        if (!Physics.Raycast(new Ray(position, direction), out var hit)) return null;
+        
+        if (!(hit.distance < 0.25)) return null;
+        
+        var neighbour = hit.collider.gameObject;
+        try
         {
-            if (hit.distance < 0.25)
+            var neighbourCell = neighbour.GetComponent<ICell>();
+            if (neighbourCell.ID == cell.ID &&
+                neighbourCell.Energy < cell.Energy)
             {
-                GameObject neighbour = hit.collider.gameObject;
-                try
-                {
-                    if (neighbour.GetComponent<ICell>().id == cell.GetComponent<ICell>().id &&
-                        neighbour.GetComponent<ICell>().energy < cell.GetComponent<ICell>().energy)
-                    {
-                        return neighbour;
-                    }
-                }
-                catch
-                {
-                    return null;
-                }
+                return neighbourCell;
             }
+        }
+        catch
+        {
+            return null;
         }
         return null;
     }
 
     public static void LegacyTransfer(int id, int energy)
     {
-        List<GameObject> sprouts = new();
-        GameObject[] gameObjects = GameObject.FindGameObjectsWithTag("Sprout");
+        var gameObjects = GameObject.FindGameObjectsWithTag("Sprout");
         
-        foreach (GameObject sprout in gameObjects)
+        //Подсказка для самого себя
+        /*foreach (var sprout in gameObjects)
         {
             if (sprout.GetComponent<ICell>().id == id)
             {
                 sprouts.Add(sprout);
             }
-        }
+        }*/
+        var sprouts = gameObjects.Where(
+            sprout => sprout.GetComponent<ICell>().ID == id).ToList();
 
-        foreach (GameObject sprout in sprouts)
+        foreach (var sprout in sprouts)
         {
-            sprout.GetComponent<ICell>().energy += energy / sprouts.Count;
+            sprout.GetComponent<ICell>().Energy += energy / sprouts.Count;
         }
     }
 }

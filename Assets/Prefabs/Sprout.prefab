@@ -76,7 +76,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.67768776, g: 0.9150943, b: 0.7066438, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -99,10 +99,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   logPrefab: {fileID: 784598532000102168, guid: 8322dbcae11857b43b93831394b969ba, type: 3}
-  SproutPrefab: {fileID: 784598532000102168}
-  SeedPrefab: {fileID: 784598532000102168, guid: 0b5fca84779411f4aa64db621495b491, type: 3}
+  sproutPrefab: {fileID: 784598532000102168}
+  seedPrefab: {fileID: 784598532000102168, guid: 0b5fca84779411f4aa64db621495b491, type: 3}
   activeGen: 9
-  isGrowing: 0
 --- !u!65 &-1722008523367566324
 BoxCollider:
   m_ObjectHideFlags: 0

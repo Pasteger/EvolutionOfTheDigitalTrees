@@ -1,42 +1,40 @@
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class SproutBehaviour : MonoBehaviour, ICell
 {
-    public int id { get; set; }
-    public int energy { get; set; }
-    public List<Dictionary<Vector3, int>> genome { get; set; }
-    public int lifespan { get; set; }
+    public int ID { get; set; }
+    public int Energy { get; set; }
+    public List<Dictionary<Vector3, int>> Genome { get; set; }
+    public int Lifespan { get; set; }
 
     public GameObject logPrefab;
-    public GameObject SproutPrefab;
-    public GameObject SeedPrefab;
+    public GameObject sproutPrefab;
+    public GameObject seedPrefab;
     public int activeGen;
 
     void FixedUpdate()
     {
-        lifespan--;
-        EnergyDistributor.EnergyDistribution(gameObject);
+        Lifespan--;
+        EnergyDistributor.EnergyDistribution(this, transform.position);
 
-        if (lifespan < 1)
+        if (Lifespan < 1)
         {
-            GameObject seed = Instantiate(SeedPrefab, transform.position, new Quaternion(0, 0, 0, 0));
-            seed.GetComponent<ICell>().genome = BetrayGenome();
-            seed.GetComponent<ICell>().energy = energy;
-            seed.GetComponent<ICell>().id = id;
+            var seed = Instantiate(seedPrefab, transform.position, Quaternion.identity);
+
+            var seedCell = seed.GetComponent<ICell>();
+            seedCell.Genome = BetrayGenome();
+            seedCell.Energy = Energy;
+            seedCell.ID = ID;
 
             Destroy(gameObject);
         }
         else
         {
-            if (energy > 15)
+            var gen = Genome[activeGen];
+            if (Energy > 15)
             {
-                Dictionary<Vector3, int> gen = genome[activeGen];
-
-                int numberDescendants = 0;
+                var numberDescendants = 0;
 
                 if (gen[Vector3.up] < 16)
                     numberDescendants++;
@@ -56,28 +54,29 @@ public class SproutBehaviour : MonoBehaviour, ICell
                 if (gen[Vector3.left] < 16)
                     Grow(Vector3.left, gen[Vector3.left], numberDescendants);
 
-                GameObject log = Instantiate(logPrefab, transform.position, new Quaternion(0, 0, 0, 0));
-                log.GetComponent<ICell>().genome = genome;
-                log.GetComponent<ICell>().energy = energy;
-                log.GetComponent<ICell>().lifespan = lifespan;
+                var log = Instantiate(logPrefab, transform.position, Quaternion.identity);
+
+                var logCell = log.GetComponent<ICell>();
+                
+                logCell.Genome = Genome;
+                logCell.Energy = Energy;
+                logCell.Lifespan = Lifespan;
 
                 Destroy(gameObject);
             }
-
         }
 
-        if (energy < 1)
+        if (Energy < 1)
         {
             Destroy(gameObject);
         }
 
-        energy--;
+        Energy--;
     }
 
-    void Grow(Vector3 direction, int gen, int numberDescendants)
+    private void Grow(Vector3 direction, int gen, int numberDescendants)
     {
-        GameObject newSprout;
-        Vector3 newPosition = gameObject.transform.position;
+        var newPosition = gameObject.transform.position;
 
         if (direction.Equals(Vector3.up))
         {
@@ -96,25 +95,24 @@ public class SproutBehaviour : MonoBehaviour, ICell
             newPosition.x -= 0.25f;
         }
 
-        if (!FindBlock(transform.position, direction))
-        {
-            newSprout = Instantiate(SproutPrefab, newPosition, new Quaternion(0, 0, 0, 0));
-            int newEnergy = (energy - 5) / numberDescendants;
+        if (FindBlock(transform.position, direction)) return;
+        
+        var newSprout = Instantiate(sproutPrefab, newPosition, Quaternion.identity);
+        var newEnergy = (Energy - 5) / numberDescendants;
 
-            newSprout.GetComponent<ICell>().genome = genome;
-            newSprout.GetComponent<ICell>().energy = newEnergy;
-            newSprout.GetComponent<ICell>().lifespan = lifespan;
-            newSprout.GetComponent<SproutBehaviour>().activeGen = gen;
+        var newSproutCell = newSprout.GetComponent<SproutBehaviour>();
+        
+        newSproutCell.Genome = Genome;
+        newSproutCell.Energy = newEnergy;
+        newSproutCell.Lifespan = Lifespan;
+        newSproutCell.activeGen = gen;
 
-            energy -= newEnergy;
-        }
+        Energy -= newEnergy;
     }
 
     private bool FindBlock(Vector3 position, Vector3 direction)
     {
-        Ray ray = new(position, direction);
-        //Debug.DrawRay(position, direction, Color.red);
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        if (Physics.Raycast(new Ray(position, direction), out var hit))
         {
             return hit.distance < 0.5;
         }
@@ -123,22 +121,22 @@ public class SproutBehaviour : MonoBehaviour, ICell
 
     private List<Dictionary<Vector3, int>> BetrayGenome()
     {
-        List<Dictionary<Vector3, int>> theGemon = new();
+        List<Dictionary<Vector3, int>> theGenome = new();
 
-        foreach (Dictionary<Vector3, int> gen in genome)
+        foreach (var gen in Genome)
         {
             Dictionary<Vector3, int> newGen = new();
-            int mutatingGene = -1;
+            var mutatingGene = -1;
 
             if (Random.Range(0, 25) == 1)
             {
                 mutatingGene = Random.Range(0, 4);
             }
 
-            int upGenMutationValue = gen[Vector3.up];
-            int downGenMutationValue = gen[Vector3.down];
-            int rightGenMutationValue = gen[Vector3.right];
-            int leftGenMutationValue = gen[Vector3.left];
+            var upGenMutationValue = gen[Vector3.up];
+            var downGenMutationValue = gen[Vector3.down];
+            var rightGenMutationValue = gen[Vector3.right];
+            var leftGenMutationValue = gen[Vector3.left];
 
             switch (mutatingGene)
             {
@@ -169,32 +167,8 @@ public class SproutBehaviour : MonoBehaviour, ICell
             newGen.Add(Vector3.right, rightGenMutationValue);
             newGen.Add(Vector3.left, leftGenMutationValue);
 
-            theGemon.Add(newGen);
+            theGenome.Add(newGen);
         }
-
-        /*for (int i = 0; i < 16; i++)
-        {
-            Dictionary<Vector3, int> oldGen = genome[i];
-            Dictionary<Vector3, int> youngGen = theGemon[i];
-
-            if (oldGen[Vector3.up] != youngGen[Vector3.up])
-            {
-                Debug.Log(i + ": (1): " + oldGen[Vector3.up] + " " + youngGen[Vector3.up]);
-            }
-            if (oldGen[Vector3.down] != youngGen[Vector3.down])
-            {
-                Debug.Log(i + ": (2): " + oldGen[Vector3.down] + " " + youngGen[Vector3.down]);
-            }
-            if (oldGen[Vector3.right] != youngGen[Vector3.right])
-            {
-                Debug.Log(i + ": (3): " + oldGen[Vector3.right] + " " + youngGen[Vector3.right]);
-            }
-            if (oldGen[Vector3.left] != youngGen[Vector3.left])
-            {
-                Debug.Log(i + ": (4): " + oldGen[Vector3.left] + " " + youngGen[Vector3.left]);
-            }
-        }*/
-
-        return theGemon;
+        return theGenome;
     }
 }

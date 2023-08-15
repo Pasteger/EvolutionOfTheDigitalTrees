@@ -1,41 +1,39 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class LogBehaviour : MonoBehaviour, ICell
 {
-    public int id { get; set; }
-    public int energy { get; set; }
-    public List<Dictionary<Vector3, int>> genome { get; set; }
-    public int lifespan { get; set; }
+    public int ID { get; set; }
+    public int Energy { get; set; }
+    public List<Dictionary<Vector3, int>> Genome { get; set; }
+    public int Lifespan { get; set; }
 
     void FixedUpdate()
     {
-        lifespan--;
-        if (lifespan < 1)
+        Lifespan--;
+        switch (Lifespan)
+        {
+            case < 1:
+                Destroy(gameObject);
+                break;
+            case 1:
+                EnergyDistributor.LegacyTransfer(ID, Energy);
+                Energy = 0;
+                break;
+        }
+
+        if (Energy > 5)
+        {
+            Energy += 100;
+        }
+
+        EnergyDistributor.EnergyDistribution(this, transform.position);
+
+        if (Energy < 1)
         {
             Destroy(gameObject);
         }
 
-        if (lifespan == 1)
-        {
-            EnergyDistributor.LegacyTransfer(id, energy);
-            energy = 0;
-        }
-
-
-        if (energy > 5)
-        {
-            energy += 100;
-        }
-
-        EnergyDistributor.EnergyDistribution(gameObject);
-
-        if (energy < 1)
-        {
-            Destroy(gameObject);
-        }
-
-        energy--;
+        Energy--;
     }
 }

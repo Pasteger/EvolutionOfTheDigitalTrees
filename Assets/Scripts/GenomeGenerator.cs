@@ -1,18 +1,17 @@
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 public class GenomeGenerator : MonoBehaviour
 {
     public GameObject seed;
-    public List<Dictionary<Vector3, int>> genome = new();
-    public static List<int> ids = new();
+    private List<Dictionary<Vector3, int>> _genome = new();
+    private static readonly List<int> IDList = new();
 
     private List<Dictionary<Vector3, int>> ManualFilling()
     {
         List<Dictionary<Vector3, int>> theGenome = new();
 
-        string genomeStritg =
+        const string genomeString =
             "\n" +
             "00: 13, 29, 14, 12; \n" +
             "01: 29, 29, 29, 29; \n" +
@@ -31,13 +30,13 @@ public class GenomeGenerator : MonoBehaviour
             "14: 29, 29, 29, 29; \n" +
             "15: 29, 29, 09, 09; \n";
 
-        for (int i = 0; i < 16; i++)
+        for (var i = 0; i < 16; i++)
         {
-            string line = genomeStritg.Substring(i * 21, 20);
-            string genOne = line.Substring(5, 2);
-            string genTwo = line.Substring(9, 2);
-            string genThree = line.Substring(13, 2);
-            string genFour = line.Substring(17, 2);
+            var line = genomeString.Substring(i * 21, 20);
+            var genOne = line.Substring(5, 2);
+            var genTwo = line.Substring(9, 2);
+            var genThree = line.Substring(13, 2);
+            var genFour = line.Substring(17, 2);
 
             Dictionary<Vector3, int> gen = new()
             {
@@ -55,7 +54,7 @@ public class GenomeGenerator : MonoBehaviour
     private List<Dictionary<Vector3, int>> RandomFilling()
     {
         List<Dictionary<Vector3, int>> theGenome = new();
-        for (int i = 0; i < 16; i++)
+        for (var i = 0; i < 16; i++)
         {
             Dictionary<Vector3, int> gen = new()
             {
@@ -71,10 +70,10 @@ public class GenomeGenerator : MonoBehaviour
 
     private void Awake()
     {
-        genome = ManualFilling();
+        _genome = ManualFilling();
 
-        seed.GetComponent<ICell>().genome = genome;
-        seed.GetComponent<ICell>().energy = 50;
+        seed.GetComponent<ICell>().Genome = _genome;
+        seed.GetComponent<ICell>().Energy = 50;
     }
 
     public static int GetId()
@@ -84,17 +83,17 @@ public class GenomeGenerator : MonoBehaviour
         {
             id = Random.Range(-2147483648, 2147483647);
         }
-        while (ids.Contains(id));
-        ids.Add(id);
+        while (IDList.Contains(id));
+        IDList.Add(id);
 
         return id;
     }
 
     public static void RemoveId(int id)
     {
-        if (ids.Contains(id))
+        if (IDList.Contains(id))
         {
-            ids.Remove(id);
+            IDList.Remove(id);
         }
     }
 }
