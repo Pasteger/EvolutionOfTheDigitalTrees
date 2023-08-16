@@ -13,7 +13,7 @@ public class SproutBehaviour : MonoBehaviour, ICell
     public GameObject seedPrefab;
     public int activeGen;
 
-    void FixedUpdate()
+    public void Life()
     {
         Lifespan--;
         EnergyDistributor.EnergyDistribution(this, transform.position);

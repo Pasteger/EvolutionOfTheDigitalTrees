@@ -8,7 +8,7 @@ public class LogBehaviour : MonoBehaviour, ICell
     public List<Dictionary<Vector3, int>> Genome { get; set; }
     public int Lifespan { get; set; }
 
-    void FixedUpdate()
+    public void Life()
     {
         Lifespan--;
         switch (Lifespan)

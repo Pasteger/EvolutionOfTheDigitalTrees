@@ -8,4 +8,6 @@ public interface ICell
     int Energy { get; set; }
     List<Dictionary<Vector3, int>> Genome { get; set; }
     int Lifespan { get; set; }
+
+    void Life();
 }

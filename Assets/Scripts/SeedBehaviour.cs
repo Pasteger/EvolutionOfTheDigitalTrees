@@ -15,7 +15,7 @@ public class SeedBehaviour : MonoBehaviour, ICell
         GenomeGenerator.RemoveId(ID);
     }
 
-    void FixedUpdate()
+    public void Life()
     {
         if (Energy < 1)
         {
