@@ -1,74 +1,70 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
-public class SproutBehaviour : MonoBehaviour, ICell
+public class SproutBehaviour : ICell
 {
-    public int ID { get; set; }
-    public int Energy { get; set; }
-    public List<Dictionary<Vector3, int>> Genome { get; set; }
-    public int Lifespan { get; set; }
+    private readonly int _activeGen;
 
-    public GameObject logPrefab;
-    public GameObject sproutPrefab;
-    public GameObject seedPrefab;
-    public int activeGen;
-
-    public void Life()
+    public SproutBehaviour(LifeExecutor lifeExecutor, GameObject ground, Vector3Int position, int lifespan, 
+        List<Dictionary<Vector3, int>> genome, int energy, int id, int activeGen)
+    {
+        Type = CellType.Sprout;
+        LifeExecutor = lifeExecutor;
+        Ground = ground;
+        Position = position;
+        Lifespan = lifespan;
+        Genome = genome;
+        Energy = energy;
+        ID = id;
+        _activeGen = activeGen;
+        LifeExecutor.SetCell(position, Type);
+    }
+    
+    public override void Life()
     {
         Lifespan--;
-        EnergyDistributor.EnergyDistribution(this, transform.position);
+        LifeExecutor.EnergyDistributor.EnergyDistribution(LifeExecutor, this);
 
         if (Lifespan < 1)
         {
-            var seed = Instantiate(seedPrefab, transform.position, Quaternion.identity);
-
-            var seedCell = seed.GetComponent<ICell>();
-            seedCell.Genome = BetrayGenome();
-            seedCell.Energy = Energy;
-            seedCell.ID = ID;
-
-            Destroy(gameObject);
+            Death();
+            LifeExecutor.AddCellBehavior(new SeedBehaviour(LifeExecutor, Ground, Position, Lifespan, BetrayGenome(), Energy, ID));
         }
         else
         {
-            var gen = Genome[activeGen];
+            var gen = Genome[_activeGen];
             if (Energy > 15)
             {
                 var numberDescendants = 0;
 
-                if (gen[Vector3.up] < 16)
+                if (gen[Vector3.up] < 16 && LifeExecutor.CheckNeighbourCell(Position, Vector3.up))
                     numberDescendants++;
-                if (gen[Vector3.down] < 16)
+                if (gen[Vector3.down] < 16 && LifeExecutor.CheckNeighbourCell(Position, Vector3.down))
                     numberDescendants++;
-                if (gen[Vector3.right] < 16)
+                if (gen[Vector3.right] < 16 && LifeExecutor.CheckNeighbourCell(Position, Vector3.right))
                     numberDescendants++;
-                if (gen[Vector3.left] < 16)
+                if (gen[Vector3.left] < 16 && LifeExecutor.CheckNeighbourCell(Position, Vector3.left))
                     numberDescendants++;
 
-                if (gen[Vector3.up] < 16)
+                if (gen[Vector3.up] < 16  && LifeExecutor.CheckNeighbourCell(Position, Vector3.up))
                     Grow(Vector3.up, gen[Vector3.up], numberDescendants);
-                if (gen[Vector3.down] < 16)
+                if (gen[Vector3.down] < 16 && LifeExecutor.CheckNeighbourCell(Position, Vector3.down))
                     Grow(Vector3.down, gen[Vector3.down], numberDescendants);
-                if (gen[Vector3.right] < 16)
+                if (gen[Vector3.right] < 16 && LifeExecutor.CheckNeighbourCell(Position, Vector3.right))
                     Grow(Vector3.right, gen[Vector3.right], numberDescendants);
-                if (gen[Vector3.left] < 16)
+                if (gen[Vector3.left] < 16 && LifeExecutor.CheckNeighbourCell(Position, Vector3.left))
                     Grow(Vector3.left, gen[Vector3.left], numberDescendants);
 
-                var log = Instantiate(logPrefab, transform.position, Quaternion.identity);
-
-                var logCell = log.GetComponent<ICell>();
-                
-                logCell.Genome = Genome;
-                logCell.Energy = Energy;
-                logCell.Lifespan = Lifespan;
-
-                Destroy(gameObject);
+                Death();
+                LifeExecutor.AddCellBehavior(new LogBehaviour(LifeExecutor, Position, Lifespan, Genome, Energy, ID));
+                return;
             }
         }
 
         if (Energy < 1)
         {
-            Destroy(gameObject);
+            Death();
         }
 
         Energy--;
@@ -76,36 +72,30 @@ public class SproutBehaviour : MonoBehaviour, ICell
 
     private void Grow(Vector3 direction, int gen, int numberDescendants)
     {
-        var newPosition = gameObject.transform.position;
+        var newPosition = Position;
 
         if (direction.Equals(Vector3.up))
         {
-            newPosition.y += 0.25f;
+            newPosition.y += CellScale;
         }
         else if (direction.Equals(Vector3.down))
         {
-            newPosition.y -= 0.25f;
+            newPosition.y -= CellScale;
         }
         else if (direction.Equals(Vector3.right))
         {
-            newPosition.x += 0.25f;
+            newPosition.x += CellScale;
         }
         else
         {
-            newPosition.x -= 0.25f;
+            newPosition.x -= CellScale;
         }
 
-        if (FindBlock(transform.position, direction)) return;
+        if (FindBlock(Position, direction)) return;
         
-        var newSprout = Instantiate(sproutPrefab, newPosition, Quaternion.identity);
         var newEnergy = (Energy - 5) / numberDescendants;
 
-        var newSproutCell = newSprout.GetComponent<SproutBehaviour>();
-        
-        newSproutCell.Genome = Genome;
-        newSproutCell.Energy = newEnergy;
-        newSproutCell.Lifespan = Lifespan;
-        newSproutCell.activeGen = gen;
+        LifeExecutor.AddCellBehavior(new SproutBehaviour(LifeExecutor, Ground, newPosition, Lifespan, Genome, newEnergy, ID, gen));
 
         Energy -= newEnergy;
     }
@@ -114,8 +104,9 @@ public class SproutBehaviour : MonoBehaviour, ICell
     {
         if (Physics.Raycast(new Ray(position, direction), out var hit))
         {
-            return hit.distance < 0.5;
+            return hit.distance < CellScale;
         }
+
         return false;
     }
 
@@ -169,6 +160,7 @@ public class SproutBehaviour : MonoBehaviour, ICell
 
             theGenome.Add(newGen);
         }
+
         return theGenome;
     }
 }

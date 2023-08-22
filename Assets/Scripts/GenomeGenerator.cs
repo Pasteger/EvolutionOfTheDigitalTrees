@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GenomeGenerator : MonoBehaviour
+public class GenomeGenerator
 {
-    public GameObject seed;
     private List<Dictionary<Vector3, int>> _genome = new();
     private static readonly List<int> IDList = new();
 
@@ -29,6 +28,44 @@ public class GenomeGenerator : MonoBehaviour
             "13: 08, 29, 29, 29; \n" +
             "14: 29, 29, 29, 29; \n" +
             "15: 29, 29, 09, 09; \n";
+        
+        // const string genomeString =
+        //     "\n" +
+        //     "00: 09, 29, 29, 29; \n" +
+        //     "01: 29, 29, 29, 29; \n" +
+        //     "02: 29, 29, 29, 29; \n" +
+        //     "03: 29, 29, 29, 29; \n" +
+        //     "04: 29, 29, 29, 29; \n" +
+        //     "05: 29, 29, 29, 29; \n" +
+        //     "06: 29, 29, 29, 29; \n" +
+        //     "07: 29, 29, 29, 29; \n" +
+        //     "08: 29, 29, 29, 29; \n" +
+        //     "09: 09, 29, 29, 29; \n" +
+        //     "10: 29, 29, 29, 29; \n" +
+        //     "11: 29, 29, 29, 29; \n" +
+        //     "12: 29, 29, 29, 29; \n" +
+        //     "13: 29, 29, 29, 29; \n" +
+        //     "14: 29, 29, 29, 29; \n" +
+        //     "15: 29, 29, 29, 29; \n";
+        
+        // const string genomeString =
+        //     "\n" +
+        //     "00: 01, 29, 29, 29; \n" +
+        //     "01: 29, 29, 29, 02; \n" +
+        //     "02: 00, 29, 29, 03; \n" +
+        //     "03: 29, 29, 29, 03; \n" +
+        //     "04: 29, 29, 29, 29; \n" +
+        //     "05: 29, 29, 29, 29; \n" +
+        //     "06: 29, 29, 29, 29; \n" +
+        //     "07: 29, 29, 29, 29; \n" +
+        //     "08: 29, 29, 29, 29; \n" +
+        //     "09: 29, 29, 29, 29; \n" +
+        //     "10: 29, 29, 29, 29; \n" +
+        //     "11: 29, 29, 29, 29; \n" +
+        //     "12: 29, 29, 29, 29; \n" +
+        //     "13: 29, 29, 29, 29; \n" +
+        //     "14: 29, 29, 29, 29; \n" +
+        //     "15: 29, 29, 29, 29; \n";
 
         for (var i = 0; i < 16; i++)
         {
@@ -67,16 +104,18 @@ public class GenomeGenerator : MonoBehaviour
         }
         return theGenome;
     }
-
-    private void Awake()
+    
+    public List<Dictionary<Vector3, int>> GetGenome()
     {
-        _genome = ManualFilling();
+        if (_genome.Count == 0)
+        {
+            _genome = ManualFilling();
+        }
 
-        seed.GetComponent<ICell>().Genome = _genome;
-        seed.GetComponent<ICell>().Energy = 50;
+        return _genome;
     }
 
-    public static int GetId()
+    public int GetId()
     {
         int id;
         do
@@ -89,7 +128,7 @@ public class GenomeGenerator : MonoBehaviour
         return id;
     }
 
-    public static void RemoveId(int id)
+    public void RemoveId(int id)
     {
         if (IDList.Contains(id))
         {
